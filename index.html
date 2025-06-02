@@ -245,9 +245,13 @@
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            initializePath(); // パスを再初期化
         }
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
+
+        // 初期パス設定
+        initializePath();
 
         // ゲーム変数
         let money = 100;
@@ -268,17 +272,21 @@
         let currentWaveEnemies = [];
         let enemySpawnIndex = 0;
 
-        // 経路定義
-        const path = [
-            {x: 50, y: canvas.height * 0.5},
-            {x: canvas.width * 0.2, y: canvas.height * 0.5},
-            {x: canvas.width * 0.2, y: canvas.height * 0.2},
-            {x: canvas.width * 0.5, y: canvas.height * 0.2},
-            {x: canvas.width * 0.5, y: canvas.height * 0.8},
-            {x: canvas.width * 0.8, y: canvas.height * 0.8},
-            {x: canvas.width * 0.8, y: canvas.height * 0.5},
-            {x: canvas.width - 50, y: canvas.height * 0.5}
-        ];
+        // 経路定義（固定座標で確実に表示）
+        let path = [];
+        
+        function initializePath() {
+            path = [
+                {x: 50, y: canvas.height * 0.5},
+                {x: canvas.width * 0.2, y: canvas.height * 0.5},
+                {x: canvas.width * 0.2, y: canvas.height * 0.2},
+                {x: canvas.width * 0.5, y: canvas.height * 0.2},
+                {x: canvas.width * 0.5, y: canvas.height * 0.8},
+                {x: canvas.width * 0.8, y: canvas.height * 0.8},
+                {x: canvas.width * 0.8, y: canvas.height * 0.5},
+                {x: canvas.width - 50, y: canvas.height * 0.5}
+            ];
+        }
 
         // タワータイプ定義
         const towerTypes = {
