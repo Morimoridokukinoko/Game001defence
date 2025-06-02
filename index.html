@@ -2,11 +2,9 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Neon Nexus Defense</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
-        
         * {
             margin: 0;
             padding: 0;
@@ -18,1336 +16,817 @@
             -ms-user-select: none;
             user-select: none;
         }
-        
+
         body {
-            font-family: 'Orbitron', monospace;
-            background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #16213e 100%);
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
             overflow: hidden;
             height: 100vh;
             width: 100vw;
             color: #fff;
             position: fixed;
         }
-        
+
         .game-container {
             position: relative;
-            width: 100vw;
             height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .hud {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            right: 10px;
-            z-index: 100;
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            font-weight: bold;
-            flex-wrap: wrap;
-            gap: 5px;
-        }
-        
-        .hud-item {
-            background: rgba(0,0,0,0.9);
-            padding: 8px 12px;
-            border: 1px solid #00ffff;
-            border-radius: 15px;
-            box-shadow: 0 0 10px rgba(0,255,255,0.3);
-            backdrop-filter: blur(10px);
-            font-size: 11px;
-            min-width: 80px;
-            text-align: center;
-        }
-        
-        .main-game {
-            flex: 1;
-            position: relative;
+            width: 100vw;
             overflow: hidden;
-            touch-action: manipulation;
         }
-        
+
         #gameCanvas {
-            width: 100%;
-            height: 100%;
-            border: 1px solid #00ffff;
-            box-shadow: 0 0 20px rgba(0,255,255,0.2);
-            background: radial-gradient(circle at center, #0a0a2e 0%, #050510 100%);
-            display: block;
-        }
-        
-        .mobile-controls {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(180deg, #1a1a3e 0%, #0d0d2a 100%);
-            border-top: 2px solid #00ffff;
-            padding: 10px;
-            z-index: 200;
-            max-height: 40vh;
-            overflow-y: auto;
-            transform: translateY(calc(100% - 60px));
-            transition: transform 0.3s ease;
-        }
-        
-        .mobile-controls.expanded {
-            transform: translateY(0);
-        }
-        
-        .controls-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #444;
-            margin-bottom: 10px;
-        }
-        
-        .expand-btn {
-            background: linear-gradient(135deg, #2a2a5e 0%, #1a1a3e 100%);
-            border: 2px solid #00ffff;
-            color: #fff;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-family: 'Orbitron', monospace;
-            font-size: 10px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        
-        .wave-info {
-            background: rgba(0,0,0,0.8);
-            padding: 10px;
-            border: 1px solid #ff00ff;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            text-align: center;
-            font-size: 11px;
-        }
-        
-        .wave-info h4 {
-            color: #ff00ff;
-            margin-bottom: 8px;
-            text-shadow: 0 0 10px #ff00ff;
-            font-size: 12px;
-        }
-        
-        .tower-menu h3 {
-            color: #00ffff;
-            margin-bottom: 10px;
-            text-align: center;
-            font-size: 14px;
-            text-shadow: 0 0 10px #00ffff;
-        }
-        
-        .tower-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            margin-bottom: 15px;
-        }
-        
-        .tower-btn {
-            background: linear-gradient(135deg, #2a2a5e 0%, #1a1a3e 100%);
-            border: 2px solid #4a4a8e;
-            color: #fff;
-            padding: 12px 6px;
-            cursor: pointer;
-            border-radius: 8px;
-            font-family: 'Orbitron', monospace;
-            font-size: 9px;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            text-align: center;
-            position: relative;
-            min-height: 60px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .tower-btn:active {
-            transform: scale(0.95);
-        }
-        
-        .tower-btn.selected {
-            border-color: #ffff00;
-            background: linear-gradient(135deg, #5e5e2a 0%, #3e3e1a 100%);
-            box-shadow: 0 0 15px rgba(255,255,0,0.5);
-        }
-        
-        .tower-btn.disabled {
-            opacity: 0.5;
-            border-color: #666;
-        }
-        
-        .tower-btn .cost {
-            color: #00ff00;
-            font-size: 8px;
-            margin-top: 4px;
-        }
-        
-        .game-controls {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 15px;
-        }
-        
-        .control-btn {
-            flex: 1;
-            background: linear-gradient(135deg, #2e4a2e 0%, #1a3e1a 100%);
-            border: 2px solid #4a8e4a;
-            color: #fff;
-            padding: 12px;
-            cursor: pointer;
-            border-radius: 8px;
-            font-family: 'Orbitron', monospace;
-            font-weight: bold;
-            font-size: 10px;
-            transition: all 0.3s ease;
-        }
-        
-        .control-btn:active {
-            transform: scale(0.95);
-        }
-        
-        .control-btn:disabled {
-            opacity: 0.6;
-            background: #333;
-            border-color: #666;
-        }
-        
-        .upgrade-panel {
-            background: rgba(0,0,0,0.95);
-            border: 2px solid #ffff00;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            display: none;
-        }
-        
-        .upgrade-panel.show {
-            display: block;
-        }
-        
-        .upgrade-btn {
-            width: 100%;
-            background: linear-gradient(135deg, #5e5e2a 0%, #3e3e1a 100%);
-            border: 2px solid #ffff00;
-            color: #fff;
-            padding: 10px;
-            margin: 5px 0;
-            cursor: pointer;
-            border-radius: 5px;
-            font-family: 'Orbitron', monospace;
-            font-size: 10px;
-            transition: all 0.3s ease;
-        }
-        
-        .upgrade-btn:active {
-            transform: scale(0.95);
-        }
-        
-        .upgrade-btn:disabled {
-            opacity: 0.5;
-            background: #333;
-        }
-        
-        .game-over {
-            position: fixed;
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.95);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 20px;
+            background: #0a0a0a;
+            cursor: crosshair;
         }
-        
-        .game-over-content {
-            background: linear-gradient(135deg, #2a1a1a 0%, #1a0a0a 100%);
-            border: 3px solid #ff0000;
-            border-radius: 20px;
-            padding: 30px;
-            text-align: center;
-            box-shadow: 0 0 50px rgba(255,0,0,0.5);
-            max-width: 300px;
+
+        .ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
         }
-        
-        .toast {
-            position: fixed;
-            top: 70px;
+
+        .top-ui {
+            position: absolute;
+            top: 10px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0,0,0,0.9);
-            color: #fff;
+            display: flex;
+            gap: 20px;
+            background: rgba(0, 255, 255, 0.1);
             padding: 10px 20px;
             border-radius: 20px;
-            border: 1px solid #00ffff;
-            font-size: 12px;
-            z-index: 300;
-            display: none;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 255, 0.3);
         }
-        
-        @media (max-width: 480px) {
-            .hud {
-                font-size: 10px;
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+            color: #00ffff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .bottom-ui {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            pointer-events: auto;
+        }
+
+        .tower-btn, .speed-btn {
+            padding: 12px 16px;
+            background: linear-gradient(45deg, #1e3c72, #2a5298);
+            border: 2px solid #00ffff;
+            border-radius: 15px;
+            color: #00ffff;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .tower-btn:hover, .speed-btn:hover {
+            background: linear-gradient(45deg, #2a5298, #1e3c72);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .tower-btn.selected {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a6f);
+            border-color: #ff6b6b;
+            color: #fff;
+        }
+
+        .speed-btn.active {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            border-color: #4ecdc4;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            border: 2px solid #ff6b6b;
+            backdrop-filter: blur(10px);
+        }
+
+        .game-over h2 {
+            color: #ff6b6b;
+            font-size: 32px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(255, 107, 107, 0.8);
+        }
+
+        .game-over p {
+            color: #00ffff;
+            font-size: 18px;
+            margin: 10px 0;
+        }
+
+        .restart-btn {
+            margin-top: 20px;
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #1e3c72, #2a5298);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            color: #00ffff;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            background: linear-gradient(45deg, #2a5298, #1e3c72);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        .speed-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 5px;
+            pointer-events: auto;
+        }
+
+        @media (max-width: 768px) {
+            .top-ui {
+                flex-direction: column;
+                gap: 5px;
+                padding: 5px 10px;
             }
             
-            .hud-item {
-                padding: 6px 8px;
-                font-size: 9px;
+            .stat {
+                font-size: 12px;
+            }
+            
+            .tower-btn, .speed-btn {
+                padding: 10px 12px;
+                font-size: 10px;
                 min-width: 60px;
             }
             
-            .tower-grid {
-                grid-template-columns: repeat(2, 1fr);
+            .speed-controls {
+                top: 10px;
+                right: 10px;
             }
-            
-            .tower-btn {
-                font-size: 8px;
-                padding: 10px 4px;
-                min-height: 50px;
-            }
-            
-            .controls-header h4 {
-                font-size: 12px;
-            }
-        }
-        
-        @media (orientation: landscape) and (max-height: 500px) {
-            .mobile-controls {
-                transform: translateY(calc(100% - 40px));
-                max-height: 60vh;
-            }
-            
-            .tower-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-        
-        .particle {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background: #00ffff;
-            border-radius: 50%;
-            pointer-events: none;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
-        }
-        
-        .pulse {
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .toast.show {
-            display: block;
-            animation: fadeIn 0.3s ease;
         }
     </style>
 </head>
 <body>
     <div class="game-container">
-        <div class="hud">
-            <div class="hud-item">
-                <span style="color: #00ff00;">¥</span>
-                <span id="money">500</span>
+        <canvas id="gameCanvas"></canvas>
+        
+        <div class="ui-overlay">
+            <div class="top-ui">
+                <div class="stat">💰 <span id="money">100</span></div>
+                <div class="stat">❤️ <span id="lives">20</span></div>
+                <div class="stat">🌊 Wave <span id="wave">1</span></div>
+                <div class="stat">⚡ Score <span id="score">0</span></div>
+                <div class="stat">⏱️ <span id="countdown">Ready</span></div>
             </div>
-            <div class="hud-item">
-                <span style="color: #ff6666;">HP: </span>
-                <span id="health">100</span>
+
+            <div class="speed-controls">
+                <button class="speed-btn" data-speed="1">1x</button>
+                <button class="speed-btn" data-speed="2">2x</button>
+                <button class="speed-btn" data-speed="4">4x</button>
+                <button class="speed-btn" data-speed="6">6x</button>
             </div>
-            <div class="hud-item">
-                <span style="color: #ffff00;">Score: </span>
-                <span id="score">0</span>
+            
+            <div class="bottom-ui">
+                <button class="tower-btn" data-tower="laser">
+                    LASER<br>💰50
+                </button>
+                <button class="tower-btn" data-tower="plasma">
+                    PLASMA<br>💰75
+                </button>
+                <button class="tower-btn" data-tower="ice">
+                    ICE<br>💰60
+                </button>
             </div>
         </div>
         
-        <div class="main-game">
-            <canvas id="gameCanvas"></canvas>
-        </div>
-        
-        <div class="mobile-controls" id="mobileControls">
-            <div class="controls-header">
-                <h4 style="color: #00ffff; font-size: 14px;">DEFENSE CONTROL</h4>
-                <button class="expand-btn" id="expandBtn">EXPAND</button>
-            </div>
-            
-            <div class="wave-info">
-                <h4>WAVE STATUS</h4>
-                <div style="display: flex; justify-content: space-between;">
-                    <span>Wave: <span id="currentWave">1</span></span>
-                    <span>Enemies: <span id="enemiesLeft">0</span></span>
-                </div>
-                <div class="pulse" style="margin-top: 8px; color: #00ffff;">Next: <span id="waveTimer">5</span>s</div>
-            </div>
-            
-            <div class="tower-menu">
-                <h3>TOWERS</h3>
-                <div class="tower-grid">
-                    <button class="tower-btn" data-tower="laser">
-                        LASER
-                        <span class="cost">¥100</span>
-                    </button>
-                    <button class="tower-btn" data-tower="cannon">
-                        PLASMA
-                        <span class="cost">¥150</span>
-                    </button>
-                    <button class="tower-btn" data-tower="freeze">
-                        CRYO
-                        <span class="cost">¥200</span>
-                    </button>
-                    <button class="tower-btn" data-tower="missile">
-                        MISSILE
-                        <span class="cost">¥300</span>
-                    </button>
-                </div>
-            </div>
-            
-            <div class="game-controls">
-                <button class="control-btn" id="startWave">START WAVE</button>
-                <button class="control-btn" id="speedToggle">SPEED: 1x</button>
-            </div>
-            
-            <div class="upgrade-panel" id="upgradePanel">
-                <h4 style="color: #ffff00; text-align: center; margin-bottom: 10px; font-size: 12px;">UPGRADE TOWER</h4>
-                <div id="towerStats" style="font-size: 10px; margin-bottom: 10px;"></div>
-                <button class="upgrade-btn" id="upgradeDamage">DAMAGE +25% (¥100)</button>
-                <button class="upgrade-btn" id="upgradeRange">RANGE +20% (¥80)</button>
-                <button class="upgrade-btn" id="upgradeSpeed">SPEED +30% (¥120)</button>
-                <button class="upgrade-btn" id="sellTower" style="background: #5e2a2a; border-color: #ff6666;">SELL TOWER</button>
-            </div>
-        </div>
-    </div>
-    
-    <div class="toast" id="toast"></div>
-    
-    <div class="game-over" id="gameOver">
-        <div class="game-over-content">
-            <h2 style="color: #ff0000; margin-bottom: 15px; font-size: 18px;">SYSTEM BREACHED</h2>
-            <p style="margin-bottom: 15px; font-size: 12px;">Defense systems compromised!</p>
-            <p style="font-size: 14px;">Score: <span id="finalScore" style="color: #ffff00;">0</span></p>
-            <p style="font-size: 14px; margin-bottom: 20px;">Wave: <span id="finalWave" style="color: #ff00ff;">1</span></p>
-            <button class="control-btn" onclick="location.reload()" style="margin-top: 15px;">RESTART</button>
+        <div id="gameOverScreen" class="game-over" style="display: none;">
+            <h2>GAME OVER</h2>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <p>Wave Reached: <span id="finalWave">1</span></p>
+            <button class="restart-btn" onclick="restartGame()">RESTART</button>
         </div>
     </div>
 
     <script>
-        class MobileGame {
-            constructor() {
-                this.canvas = document.getElementById('gameCanvas');
-                this.ctx = this.canvas.getContext('2d');
-                this.setupCanvas();
-                
-                this.towers = [];
-                this.enemies = [];
-                this.projectiles = [];
-                this.particles = [];
-                this.money = 500;
-                this.health = 100;
-                this.score = 0;
-                this.wave = 1;
-                this.selectedTowerType = null;
-                this.selectedTower = null;
-                this.gameSpeed = 1;
-                this.waveInProgress = false;
-                this.enemiesSpawned = 0;
-                this.enemiesToSpawn = 5;
-                this.spawnTimer = 0;
-                this.waveTimer = 5;
-                this.lastTime = 0;
-                this.particleCount = 0;
-                
-                this.setupPath();
-                this.setupTowerTypes();
-                this.init();
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // キャンバスサイズ設定
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // ゲーム変数
+        let money = 100;
+        let lives = 20;
+        let score = 0;
+        let currentWave = 1;
+        let waveCountdown = 180;
+        let gameOver = false;
+        let selectedTower = null;
+        let frameCount = 0;
+        let gameSpeed = 1;
+
+        // ゲームオブジェクト
+        let towers = [];
+        let enemies = [];
+        let projectiles = [];
+        let effects = [];
+        let currentWaveEnemies = [];
+        let enemySpawnIndex = 0;
+
+        // 経路定義
+        const path = [
+            {x: 50, y: canvas.height * 0.5},
+            {x: canvas.width * 0.2, y: canvas.height * 0.5},
+            {x: canvas.width * 0.2, y: canvas.height * 0.2},
+            {x: canvas.width * 0.5, y: canvas.height * 0.2},
+            {x: canvas.width * 0.5, y: canvas.height * 0.8},
+            {x: canvas.width * 0.8, y: canvas.height * 0.8},
+            {x: canvas.width * 0.8, y: canvas.height * 0.5},
+            {x: canvas.width - 50, y: canvas.height * 0.5}
+        ];
+
+        // タワータイプ定義
+        const towerTypes = {
+            laser: {
+                cost: 50,
+                damage: 25,
+                range: 120,
+                fireRate: 30,
+                color: '#ff6b6b',
+                projectileSpeed: 8,
+                type: 'laser'
+            },
+            plasma: {
+                cost: 75,
+                damage: 40,
+                range: 100,
+                fireRate: 45,
+                color: '#4ecdc4',
+                projectileSpeed: 6,
+                type: 'plasma'
+            },
+            ice: {
+                cost: 60,
+                damage: 15,
+                range: 110,
+                fireRate: 20,
+                color: '#74b9ff',
+                projectileSpeed: 7,
+                type: 'ice',
+                slow: true
             }
-            
-            setupCanvas() {
-                const rect = this.canvas.getBoundingClientRect();
-                const dpr = Math.min(window.devicePixelRatio || 1, 2);
-                this.canvas.width = rect.width * dpr;
-                this.canvas.height = rect.height * dpr;
-                this.ctx.scale(dpr, dpr);
-                this.canvas.style.width = rect.width + 'px';
-                this.canvas.style.height = rect.height + 'px';
-                
-                this.canvasWidth = rect.width;
-                this.canvasHeight = rect.height;
+        };
+
+        // 敵タイプ定義
+        const enemyTypes = {
+            normal: {
+                hp: 100,
+                speed: 1.5,
+                color: '#4ecdc4',
+                reward: 10,
+                size: 15
+            },
+            fast: {
+                hp: 50,
+                speed: 3,
+                color: '#ff6b6b',
+                reward: 15,
+                size: 12
+            },
+            armor: {
+                hp: 200,
+                speed: 1,
+                color: '#95a5a6',
+                reward: 25,
+                size: 18,
+                armor: 0.5,
+                laserWeak: true
+            },
+            stealth: {
+                hp: 80,
+                speed: 2,
+                color: '#9b59b6',
+                reward: 20,
+                size: 13,
+                stealth: true,
+                alpha: 0.3
+            },
+            healer: {
+                hp: 120,
+                speed: 1.2,
+                color: '#2ecc71',
+                reward: 30,
+                size: 16,
+                healer: true
+            },
+            splitter: {
+                hp: 60,
+                speed: 1.8,
+                color: '#e74c3c',
+                reward: 15,
+                size: 14,
+                splitter: true
+            },
+            shield: {
+                hp: 150,
+                speed: 1.3,
+                color: '#f39c12',
+                reward: 20,
+                size: 17,
+                shield: true
+            },
+            teleport: {
+                hp: 90,
+                speed: 1.5,
+                color: '#8e44ad',
+                reward: 25,
+                size: 14,
+                teleport: true
+            },
+            boss: {
+                hp: 1000,
+                speed: 0.8,
+                color: '#c0392b',
+                reward: 100,
+                size: 30,
+                boss: true
+            },
+            rush: {
+                hp: 70,
+                speed: 1.5,
+                color: '#e67e22',
+                reward: 18,
+                size: 13,
+                rush: true
+            },
+            barrier: {
+                hp: 80,
+                speed: 1.4,
+                color: '#3498db',
+                reward: 22,
+                size: 15,
+                barrier: 100
             }
+        };
+
+        // イベントリスナー
+        document.addEventListener('click', handleClick);
+        document.addEventListener('touchstart', handleTouch);
+
+        // タワー選択
+        document.querySelectorAll('.tower-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.tower-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedTower = btn.dataset.tower;
+            });
+        });
+
+        // 速度制御
+        document.querySelectorAll('.speed-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                gameSpeed = parseInt(btn.dataset.speed);
+            });
+        });
+
+        // 初期速度設定
+        document.querySelector('.speed-btn[data-speed="1"]').classList.add('active');
+
+        function handleClick(e) {
+            if (e.target.closest('.ui-overlay')) return;
+            placeTower(e.clientX, e.clientY);
+        }
+
+        function handleTouch(e) {
+            e.preventDefault();
+            if (e.target.closest('.ui-overlay')) return;
+            const touch = e.touches[0];
+            placeTower(touch.clientX, touch.clientY);
+        }
+
+        function placeTower(x, y) {
+            if (!selectedTower || gameOver) return;
             
-            setupPath() {
-                const w = this.canvasWidth;
-                const h = this.canvasHeight;
-                
-                this.path = [
-                    {x: -20, y: h * 0.5},
-                    {x: w * 0.15, y: h * 0.5},
-                    {x: w * 0.15, y: h * 0.3},
-                    {x: w * 0.4, y: h * 0.3},
-                    {x: w * 0.4, y: h * 0.7},
-                    {x: w * 0.65, y: h * 0.7},
-                    {x: w * 0.65, y: h * 0.2},
-                    {x: w * 0.85, y: h * 0.2},
-                    {x: w * 0.85, y: h * 0.6},
-                    {x: w + 20, y: h * 0.6}
-                ];
-            }
-            
-            setupTowerTypes() {
-                const scale = Math.min(this.canvasWidth / 400, this.canvasHeight / 600);
-                
-                this.towerTypes = {
-                    laser: {
-                        name: 'Laser Turret',
-                        cost: 100,
-                        damage: 25,
-                        range: 80 * scale,
-                        fireRate: 300,
-                        color: '#ff0000',
-                        projectileSpeed: 8 * scale
-                    },
-                    cannon: {
-                        name: 'Plasma Cannon',
-                        cost: 150,
-                        damage: 40,
-                        range: 70 * scale,
-                        fireRate: 600,
-                        color: '#00ff00',
-                        projectileSpeed: 6 * scale,
-                        splash: 25 * scale
-                    },
-                    freeze: {
-                        name: 'Cryo Field',
-                        cost: 200,
-                        damage: 15,
-                        range: 90 * scale,
-                        fireRate: 400,
-                        color: '#00ffff',
-                        projectileSpeed: 7 * scale,
-                        slow: 0.5
-                    },
-                    missile: {
-                        name: 'Missile Launcher',
-                        cost: 300,
-                        damage: 80,
-                        range: 120 * scale,
-                        fireRate: 1000,
-                        color: '#ffff00',
-                        projectileSpeed: 4 * scale,
-                        splash: 40 * scale,
-                        homing: true
-                    }
-                };
-            }
-            
-            init() {
-                this.bindEvents();
-                this.gameLoop();
-                this.updateTowerButtons();
-                
-                // Start with controls collapsed on mobile
-                if (window.innerWidth <= 768) {
-                    document.getElementById('mobileControls').classList.remove('expanded');
-                }
-            }
-            
-            bindEvents() {
-                // Touch events for canvas
-                this.canvas.addEventListener('touchstart', (e) => this.handleTouch(e), { passive: false });
-                this.canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
-                
-                // Tower selection
-                document.querySelectorAll('.tower-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        if (btn.classList.contains('disabled')) return;
-                        
-                        document.querySelectorAll('.tower-btn').forEach(b => b.classList.remove('selected'));
-                        btn.classList.add('selected');
-                        this.selectedTowerType = btn.dataset.tower;
-                        this.selectedTower = null;
-                        this.hideUpgradePanel();
-                        this.showToast(`${this.towerTypes[this.selectedTowerType].name} selected`);
-                    });
-                });
-                
-                // Game controls
-                document.getElementById('startWave').addEventListener('click', () => this.startWave());
-                document.getElementById('speedToggle').addEventListener('click', () => this.toggleSpeed());
-                
-                // Expand button
-                document.getElementById('expandBtn').addEventListener('click', () => {
-                    const controls = document.getElementById('mobileControls');
-                    const btn = document.getElementById('expandBtn');
-                    controls.classList.toggle('expanded');
-                    btn.textContent = controls.classList.contains('expanded') ? 'COLLAPSE' : 'EXPAND';
-                });
-                
-                // Upgrade buttons
-                document.getElementById('upgradeDamage').addEventListener('click', () => this.upgradeTower('damage'));
-                document.getElementById('upgradeRange').addEventListener('click', () => this.upgradeTower('range'));
-                document.getElementById('upgradeSpeed').addEventListener('click', () => this.upgradeTower('speed'));
-                document.getElementById('sellTower').addEventListener('click', () => this.sellTower());
-                
-                // Resize handler
-                let resizeTimeout;
-                window.addEventListener('resize', () => {
-                    clearTimeout(resizeTimeout);
-                    resizeTimeout = setTimeout(() => {
-                        this.setupCanvas();
-                        this.setupPath();
-                        this.setupTowerTypes();
-                    }, 250);
-                });
-                
-                // Prevent zoom on double tap
-                document.addEventListener('touchend', (e) => {
-                    if (e.touches.length > 1) e.preventDefault();
-                }, { passive: false });
-            }
-            
-            handleTouch(e) {
-                e.preventDefault();
-                const touch = e.touches[0];
-                const rect = this.canvas.getBoundingClientRect();
-                const x = (touch.clientX - rect.left) * (this.canvasWidth / rect.width);
-                const y = (touch.clientY - rect.top) * (this.canvasHeight / rect.height);
-                this.handleCanvasClick({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} });
-            }
-            
-            handleCanvasClick(e) {
-                e.preventDefault();
-                const rect = this.canvas.getBoundingClientRect();
-                const x = (e.clientX - rect.left) * (this.canvasWidth / rect.width);
-                const y = (e.clientY - rect.top) * (this.canvasHeight / rect.height);
-                
-                // Check if clicking on existing tower
-                const clickedTower = this.towers.find(tower => {
-                    const dx = x - tower.x;
-                    const dy = y - tower.y;
-                    return Math.sqrt(dx * dx + dy * dy) < 25;
-                });
-                
-                if (clickedTower) {
-                    this.selectedTower = clickedTower;
-                    this.selectedTowerType = null;
-                    this.showUpgradePanel();
-                    document.querySelectorAll('.tower-btn').forEach(b => b.classList.remove('selected'));
-                    
-                    // Expand controls to show upgrade panel
-                    const controls = document.getElementById('mobileControls');
-                    controls.classList.add('expanded');
-                    document.getElementById('expandBtn').textContent = 'COLLAPSE';
-                    return;
-                }
-                
-                // Place new tower
-                if (this.selectedTowerType && this.canPlaceTower(x, y)) {
-                    const towerType = this.towerTypes[this.selectedTowerType];
-                    if (this.money >= towerType.cost) {
-                        this.placeTower(x, y, this.selectedTowerType);
-                        this.money -= towerType.cost;
-                        this.updateUI();
-                        this.showToast(`${towerType.name} deployed!`);
-                    } else {
-                        this.showToast('Insufficient credits!');
-                    }
-                } else if (this.selectedTowerType) {
-                    this.showToast('Cannot place tower here!');
-                } else {
-                    this.selectedTower = null;
-                    this.hideUpgradePanel();
-                }
-            }
-            
-            showToast(message) {
-                const toast = document.getElementById('toast');
-                toast.textContent = message;
-                toast.classList.add('show');
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 2000);
-            }
-            
-            canPlaceTower(x, y) {
-                // Check if too close to path
-                for (let i = 0; i < this.path.length - 1; i++) {
-                    const dist = this.distanceToLineSegment(x, y, this.path[i], this.path[i + 1]);
-                    if (dist < 35) return false;
-                }
-                
-                // Check if too close to other towers
-                for (const tower of this.towers) {
-                    const dx = x - tower.x;
-                    const dy = y - tower.y;
-                    if (Math.sqrt(dx * dx + dy * dy) < 40) return false;
-                }
-                
-                return true;
-            }
-            
-            distanceToLineSegment(px, py, line1, line2) {
-                const A = px - line1.x;
-                const B = py - line1.y;
-                const C = line2.x - line1.x;
-                const D = line2.y - line1.y;
-                
-                const dot = A * C + B * D;
-                const lenSq = C * C + D * D;
-                let param = -1;
-                if (lenSq !== 0) param = dot / lenSq;
-                
-                let xx, yy;
-                if (param < 0) {
-                    xx = line1.x;
-                    yy = line1.y;
-                } else if (param > 1) {
-                    xx = line2.x;
-                    yy = line2.y;
-                } else {
-                    xx = line1.x + param * C;
-                    yy = line1.y + param * D;
-                }
-                
-                const dx = px - xx;
-                const dy = py - yy;
-                return Math.sqrt(dx * dx + dy * dy);
-            }
-            
-            placeTower(x, y, type) {
-                const towerData = this.towerTypes[type];
-                const tower = {
-                    x, y, type,
-                    damage: towerData.damage,
-                    range: towerData.range,
-                    fireRate: towerData.fireRate,
+            const towerType = towerTypes[selectedTower];
+            if (money < towerType.cost) return;
+
+            // 経路やタワーとの重複チェック
+            if (isValidPlacement(x, y)) {
+                towers.push({
+                    x: x,
+                    y: y,
+                    type: selectedTower,
                     lastFire: 0,
-                    level: 1,
-                    kills: 0,
                     target: null,
-                    damageUpgrades: 0,
-                    rangeUpgrades: 0,
-                    speedUpgrades: 0
-                };
-                this.towers.push(tower);
-            }
-            
-            startWave() {
-                if (this.waveInProgress) return;
-                
-                this.waveInProgress = true;
-                this.enemiesSpawned = 0;
-                this.enemiesToSpawn = Math.floor(5 + this.wave * 2);
-                this.spawnTimer = 0;
-                
-                document.getElementById('startWave').textContent = 'WAVE ACTIVE';
-                document.getElementById('startWave').disabled = true;
-                this.showToast(`Wave ${this.wave} incoming!`);
-            }
-            
-            spawnEnemy() {
-                const enemyTypes = ['basic', 'fast', 'heavy'];
-                if (this.wave >= 3) enemyTypes.push('stealth');
-                
-                const type = enemyTypes[Math.floor(Math.random() * Math.min(enemyTypes.length, Math.floor(1 + this.wave / 2)))];
-                
-                const scale = Math.min(this.canvasWidth / 400, this.canvasHeight / 600);
-                
-                const enemyData = {
-                    basic: { hp: 50 + this.wave * 8, speed: 1 * scale, reward: 10, color: '#ff6666', size: 10 * scale },
-                    fast: { hp: 30 + this.wave * 6, speed: 1.8 * scale, reward: 15, color: '#ffff66', size: 8 * scale },
-                    heavy: { hp: 100 + this.wave * 20, speed: 0.6 * scale, reward: 25, color: '#ff66ff', size: 14 * scale },
-                    stealth: { hp: 40 + this.wave * 10, speed: 1.3 * scale, reward: 20, color: '#66ffff', size: 9 * scale, stealth: true }
-                };
-                
-                const data = enemyData[type];
-                const enemy = {
-                    x: this.path[0].x,
-                    y: this.path[0].y,
-                    hp: data.hp,
-                    maxHp: data.hp,
-                    speed: data.speed,
-                    reward: data.reward,
-                    color: data.color,
-                    size: data.size,
-                    pathIndex: 0,
-                    type: type,
-                    slowEffect: 1,
-                    slowTimer: 0,
-                    stealth: data.stealth || false,
-                    stealthTimer: 0,
-                    visible: true
-                };
-                
-                this.enemies.push(enemy);
-            }
-            
-            updateEnemies(deltaTime) {
-                for (let i = this.enemies.length - 1; i >= 0; i--) {
-                    const enemy = this.enemies[i];
-                    
-                    // Update slow effect
-                    if (enemy.slowTimer > 0) {
-                        enemy.slowTimer -= deltaTime;
-                        if (enemy.slowTimer <= 0) {
-                            enemy.slowEffect = 1;
-                        }
-                    }
-                    
-                    // Update stealth
-                    if (enemy.stealth) {
-                        enemy.stealthTimer += deltaTime;
-                        enemy.visible = Math.sin(enemy.stealthTimer * 0.01) > 0;
-                    }
-                    
-                    // Move enemy along path
-                    if (enemy.pathIndex < this.path.length - 1) {
-                        const current = this.path[enemy.pathIndex];
-                        const next = this.path[enemy.pathIndex + 1];
-                        const dx = next.x - current.x;
-                        const dy = next.y - current.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        
-                        if (distance > 0) {
-                            const moveDistance = enemy.speed * enemy.slowEffect * deltaTime * 0.1;
-                            enemy.x += (dx / distance) * moveDistance;
-                            enemy.y += (dy / distance) * moveDistance;
-                            
-                            const distToNext = Math.sqrt((next.x - enemy.x) ** 2 + (next.y - enemy.y) ** 2);
-                            if (distToNext < 5) {
-                                enemy.pathIndex++;
-                            }
-                        }
-                    } else {
-                        // Enemy reached end
-                        this.health -= Math.max(5, Math.floor(enemy.maxHp / 10));
-                        this.enemies.splice(i, 1);
-                        if (this.health <= 0) {
-                            this.gameOver();
-                        }
-                        continue;
-                    }
-                    
-                    // Remove dead enemies
-                    if (enemy.hp <= 0) {
-                        this.money += enemy.reward;
-                        this.score += enemy.reward * 10;
-                        this.createDeathParticles(enemy.x, enemy.y, enemy.color);
-                        this.enemies.splice(i, 1);
-                    }
-                }
-            }
-            
-            updateTowers(deltaTime) {
-                for (const tower of this.towers) {
-                    tower.lastFire += deltaTime;
-                    
-                    // Find target (closest enemy in range)
-                    tower.target = null;
-                    let closestDistance = tower.range;
-                    
-                    for (const enemy of this.enemies) {
-                        if (enemy.stealth && !enemy.visible) continue;
-                        
-                        const dx = enemy.x - tower.x;
-                        const dy = enemy.y - tower.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        
-                        if (distance <= tower.range && distance < closestDistance) {
-                            tower.target = enemy;
-                            closestDistance = distance;
-                        }
-                    }
-                    
-                    // Fire at target
-                    const actualFireRate = tower.fireRate * Math.pow(0.85, tower.speedUpgrades);
-                    if (tower.target && tower.lastFire >= actualFireRate) {
-                        this.fireTower(tower);
-                        tower.lastFire = 0;
-                    }
-                }
-            }
-            
-            fireTower(tower) {
-                const towerData = this.towerTypes[tower.type];
-                const actualDamage = tower.damage * Math.pow(1.25, tower.damageUpgrades);
-                
-                const projectile = {
-                    x: tower.x,
-                    y: tower.y,
-                    targetX: tower.target.x,
-                    targetY: tower.target.y,
-                    target: towerData.homing ? tower.target : null,
-                    speed: towerData.projectileSpeed,
-                    damage: actualDamage,
-                    color: towerData.color,
-                    splash: towerData.splash || 0,
-                    slow: towerData.slow || 0,
-                    tower: tower,
-                    life: 100
-                };
-                
-                const dx = projectile.targetX - projectile.x;
-                const dy = projectile.targetY - projectile.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                projectile.vx = (dx / distance) * projectile.speed;
-                projectile.vy = (dy / distance) * projectile.speed;
-                
-                this.projectiles.push(projectile);
-            }
-            
-            updateProjectiles(deltaTime) {
-                for (let i = this.projectiles.length - 1; i >= 0; i--) {
-                    const proj = this.projectiles[i];
-                    proj.life--;
-                    
-                    // Homing projectiles
-                    if (proj.target && proj.target.hp > 0 && this.enemies.includes(proj.target)) {
-                        const dx = proj.target.x - proj.x;
-                        const dy = proj.target.y - proj.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        if (distance > 0) {
-                            proj.vx = (dx / distance) * proj.speed;
-                            proj.vy = (dy / distance) * proj.speed;
-                        }
-                    }
-                    
-                    proj.x += proj.vx * deltaTime * 0.1;
-                    proj.y += proj.vy * deltaTime * 0.1;
-                    
-                    // Check collision with enemies
-                    let hit = false;
-                    for (const enemy of this.enemies) {
-                        const dx = enemy.x - proj.x;
-                        const dy = enemy.y - proj.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        
-                        if (distance < enemy.size + 5) {
-                            this.damageEnemy(enemy, proj.damage, proj.slow);
-                            if (proj.splash > 0) {
-                                this.splashDamage(proj.x, proj.y, proj.splash, proj.damage * 0.6);
-                            }
-                            this.createHitParticles(proj.x, proj.y, proj.color);
-                            proj.tower.kills++;
-                            hit = true;
-                            break;
-                        }
-                    }
-                    
-                    // Remove projectile if hit, out of bounds, or expired
-                    if (hit || proj.life <= 0 || proj.x < -50 || proj.x > this.canvasWidth + 50 || 
-                        proj.y < -50 || proj.y > this.canvasHeight + 50) {
-                        this.projectiles.splice(i, 1);
-                    }
-                }
-            }
-            
-            damageEnemy(enemy, damage, slow) {
-                enemy.hp -= damage;
-                if (slow > 0) {
-                    enemy.slowEffect = Math.min(enemy.slowEffect, slow);
-                    enemy.slowTimer = 2000;
-                }
-            }
-            
-            splashDamage(x, y, radius, damage) {
-                for (const enemy of this.enemies) {
-                    const dx = enemy.x - x;
-                    const dy = enemy.y - y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (distance <= radius) {
-                        const damageMultiplier = 1 - (distance / radius);
-                        this.damageEnemy(enemy, damage * damageMultiplier, 0);
-                    }
-                }
-            }
-            
-            createHitParticles(x, y, color) {
-                if (this.particleCount > 50) return; // Limit particles for performance
-                
-                for (let i = 0; i < 3; i++) {
-                    this.particles.push({
-                        x: x + (Math.random() - 0.5) * 10,
-                        y: y + (Math.random() - 0.5) * 10,
-                        vx: (Math.random() - 0.5) * 2,
-                        vy: (Math.random() - 0.5) * 2,
-                        color: color,
-                        life: 300,
-                        maxLife: 300,
-                        size: 2
-                    });
-                    this.particleCount++;
-                }
-            }
-            
-            createDeathParticles(x, y, color) {
-                if (this.particleCount > 50) return;
-                
-                for (let i = 0; i < 5; i++) {
-                    this.particles.push({
-                        x: x + (Math.random() - 0.5) * 20,
-                        y: y + (Math.random() - 0.5) * 20,
-                        vx: (Math.random() - 0.5) * 4,
-                        vy: (Math.random() - 0.5) * 4,
-                        color: color,
-                        life: 600,
-                        maxLife: 600,
-                        size: 3
-                    });
-                    this.particleCount++;
-                }
-            }
-            
-            updateParticles(deltaTime) {
-                for (let i = this.particles.length - 1; i >= 0; i--) {
-                    const particle = this.particles[i];
-                    particle.life -= deltaTime;
-                    particle.x += particle.vx * deltaTime * 0.1;
-                    particle.y += particle.vy * deltaTime * 0.1;
-                    particle.vy += 0.1; // Gravity
-                    
-                    if (particle.life <= 0) {
-                        this.particles.splice(i, 1);
-                        this.particleCount--;
-                    }
-                }
-            }
-            
-            toggleSpeed() {
-                this.gameSpeed = this.gameSpeed === 1 ? 2 : this.gameSpeed === 2 ? 3 : 1;
-                document.getElementById('speedToggle').textContent = `SPEED: ${this.gameSpeed}x`;
-            }
-            
-            showUpgradePanel() {
-                if (!this.selectedTower) return;
-                
-                const panel = document.getElementById('upgradePanel');
-                const stats = document.getElementById('towerStats');
-                const tower = this.selectedTower;
-                const towerData = this.towerTypes[tower.type];
-                
-                const actualDamage = Math.floor(tower.damage * Math.pow(1.25, tower.damageUpgrades));
-                const actualRange = Math.floor(tower.range * Math.pow(1.2, tower.rangeUpgrades));
-                const actualSpeed = Math.floor(tower.fireRate * Math.pow(0.85, tower.speedUpgrades));
-                
-                stats.innerHTML = `
-                    <div><strong>${towerData.name}</strong> (Level ${tower.level})</div>
-                    <div>Damage: ${actualDamage}</div>
-                    <div>Range: ${actualRange}</div>
-                    <div>Fire Rate: ${actualSpeed}ms</div>
-                    <div>Kills: ${tower.kills}</div>
-                `;
-                
-                // Update upgrade buttons
-                const damageCost = 100 + (tower.damageUpgrades * 50);
-                const rangeCost = 80 + (tower.rangeUpgrades * 40);
-                const speedCost = 120 + (tower.speedUpgrades * 60);
-                
-                document.getElementById('upgradeDamage').textContent = `DAMAGE +25% (¥${damageCost})`;
-                document.getElementById('upgradeRange').textContent = `RANGE +20% (¥${rangeCost})`;
-                document.getElementById('upgradeSpeed').textContent = `SPEED +15% (¥${speedCost})`;
-                
-                document.getElementById('upgradeDamage').disabled = this.money < damageCost;
-                document.getElementById('upgradeRange').disabled = this.money < rangeCost;
-                document.getElementById('upgradeSpeed').disabled = this.money < speedCost;
-                
-                panel.classList.add('show');
-            }
-            
-            hideUpgradePanel() {
-                document.getElementById('upgradePanel').classList.remove('show');
-            }
-            
-            upgradeTower(type) {
-                if (!this.selectedTower) return;
-                
-                const tower = this.selectedTower;
-                let cost;
-                
-                switch(type) {
-                    case 'damage':
-                        cost = 100 + (tower.damageUpgrades * 50);
-                        if (this.money >= cost) {
-                            this.money -= cost;
-                            tower.damageUpgrades++;
-                            tower.level++;
-                            this.showToast('Damage upgraded!');
-                        }
-                        break;
-                    case 'range':
-                        cost = 80 + (tower.rangeUpgrades * 40);
-                        if (this.money >= cost) {
-                            this.money -= cost;
-                            tower.rangeUpgrades++;
-                            tower.range *= 1.2;
-                            tower.level++;
-                            this.showToast('Range upgraded!');
-                        }
-                        break;
-                    case 'speed':
-                        cost = 120 + (tower.speedUpgrades * 60);
-                        if (this.money >= cost) {
-                            this.money -= cost;
-                            tower.speedUpgrades++;
-                            tower.level++;
-                            this.showToast('Speed upgraded!');
-                        }
-                        break;
-                }
-                
-                this.updateUI();
-                this.showUpgradePanel();
-            }
-            
-            sellTower() {
-                if (!this.selectedTower) return;
-                
-                const tower = this.selectedTower;
-                const towerData = this.towerTypes[tower.type];
-                const refund = Math.floor((towerData.cost + 
-                    (tower.damageUpgrades * 75) + 
-                    (tower.rangeUpgrades * 60) + 
-                    (tower.speedUpgrades * 90)) * 0.7);
-                
-                this.money += refund;
-                this.towers.splice(this.towers.indexOf(tower), 1);
-                this.selectedTower = null;
-                this.hideUpgradePanel();
-                this.showToast(`Tower sold for ¥${refund}`);
-                this.updateUI();
-            }
-            
-            updateTowerButtons() {
-                document.querySelectorAll('.tower-btn').forEach(btn => {
-                    const towerType = btn.dataset.tower;
-                    const cost = this.towerTypes[towerType].cost;
-                    btn.classList.toggle('disabled', this.money < cost);
+                    ...towerType
                 });
-            }
-            
-            updateUI() {
-                document.getElementById('money').textContent = this.money;
-                document.getElementById('health').textContent = Math.max(0, this.health);
-                document.getElementById('score').textContent = this.score;
-                document.getElementById('currentWave').textContent = this.wave;
-                document.getElementById('enemiesLeft').textContent = 
-                    this.waveInProgress ? (this.enemiesToSpawn - this.enemiesSpawned + this.enemies.length) : 0;
-                
-                this.updateTowerButtons();
-            }
-            
-            gameLoop(currentTime = 0) {
-                const deltaTime = Math.min(currentTime - this.lastTime, 50) * this.gameSpeed;
-                this.lastTime = currentTime;
-                
-                if (deltaTime > 0) {
-                    this.update(deltaTime);
-                }
-                this.render();
-                requestAnimationFrame((time) => this.gameLoop(time));
-            }
-            
-            update(deltaTime) {
-                // Wave management
-                if (this.waveInProgress) {
-                    this.spawnTimer += deltaTime;
-                    
-                    if (this.enemiesSpawned < this.enemiesToSpawn && this.spawnTimer >= 800) {
-                        this.spawnEnemy();
-                        this.enemiesSpawned++;
-                        this.spawnTimer = 0;
-                    }
-                    
-                    if (this.enemiesSpawned >= this.enemiesToSpawn && this.enemies.length === 0) {
-                        this.waveInProgress = false;
-                        this.wave++;
-                        this.waveTimer = 5;
-                        this.money += 50 + (this.wave * 10);
-                        this.score += 100 * this.wave;
-                        document.getElementById('startWave').textContent = 'START WAVE';
-                        document.getElementById('startWave').disabled = false;
-                        this.showToast(`Wave ${this.wave - 1} complete! Bonus: ¥${50 + ((this.wave - 1) * 10)}`);
-                    }
-                } else {
-                    this.waveTimer -= deltaTime / 1000;
-                    if (this.waveTimer <= 0) {
-                        this.startWave();
-                    }
-                    document.getElementById('waveTimer').textContent = Math.max(0, Math.ceil(this.waveTimer));
-                }
-                
-                this.updateEnemies(deltaTime);
-                this.updateTowers(deltaTime);
-                this.updateProjectiles(deltaTime);
-                this.updateParticles(deltaTime);
-                this.updateUI();
-            }
-            
-            render() {
-                // Clear canvas
-                this.ctx.fillStyle = 'rgba(5, 5, 16, 0.1)';
-                this.ctx.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
-                
-                // Draw path
-                this.ctx.strokeStyle = '#333366';
-                this.ctx.lineWidth = 30;
-                this.ctx.lineCap = 'round';
-                this.ctx.beginPath();
-                this.ctx.moveTo(this.path[0].x, this.path[0].y);
-                for (let i = 1; i < this.path.length; i++) {
-                    this.ctx.lineTo(this.path[i].x, this.path[i].y);
-                }
-                this.ctx.stroke();
-                
-                // Draw path glow
-                this.ctx.strokeStyle = '#00ffff';
-                this.ctx.lineWidth = 2;
-                this.ctx.beginPath();
-                this.ctx.moveTo(this.path[0].x, this.path[0].y);
-                for (let i = 1; i < this.path.length; i++) {
-                    this.ctx.lineTo(this.path[i].x, this.path[i].y);
-                }
-                this.ctx.stroke();
-                
-                // Draw towers
-                for (const tower of this.towers) {
-                    const towerData = this.towerTypes[tower.type];
-                    
-                    // Tower range (if selected)
-                    if (tower === this.selectedTower) {
-                        this.ctx.strokeStyle = 'rgba(255, 255, 0, 0.3)';
-                        this.ctx.lineWidth = 2;
-                        this.ctx.beginPath();
-                        this.ctx.arc(tower.x, tower.y, tower.range, 0, Math.PI * 2);
-                        this.ctx.stroke();
-                    }
-                    
-                    // Tower base
-                    this.ctx.fillStyle = '#444466';
-                    this.ctx.beginPath();
-                    this.ctx.arc(tower.x, tower.y, 15, 0, Math.PI * 2);
-                    this.ctx.fill();
-                    
-                    // Tower gun
-                    this.ctx.fillStyle = towerData.color;
-                    this.ctx.beginPath();
-                    this.ctx.arc(tower.x, tower.y, 8, 0, Math.PI * 2);
-                    this.ctx.fill();
-                    
-                    // Level indicator
-                    if (tower.level > 1) {
-                        this.ctx.fillStyle = '#ffff00';
-                        this.ctx.font = '10px Orbitron';
-                        this.ctx.textAlign = 'center';
-                        this.ctx.fillText(tower.level, tower.x, tower.y - 20);
-                    }
-                }
-                
-                // Draw enemies
-                for (const enemy of this.enemies) {
-                    if (!enemy.visible) continue;
-                    
-                    // Enemy body
-                    this.ctx.fillStyle = enemy.color;
-                    this.ctx.beginPath();
-                    this.ctx.arc(enemy.x, enemy.y, enemy.size, 0, Math.PI * 2);
-                    this.ctx.fill();
-                    
-                    // Health bar
-                    const healthPercent = enemy.hp / enemy.maxHp;
-                    const barWidth = enemy.size * 2;
-                    const barHeight = 4;
-                    
-                    this.ctx.fillStyle = '#000';
-                    this.ctx.fillRect(enemy.x - barWidth/2, enemy.y - enemy.size - 8, barWidth, barHeight);
-                    
-                    this.ctx.fillStyle = healthPercent > 0.5 ? '#00ff00' : healthPercent > 0.25 ? '#ffff00' : '#ff0000';
-                    this.ctx.fillRect(enemy.x - barWidth/2, enemy.y - enemy.size - 8, barWidth * healthPercent, barHeight);
-                    
-                    // Slow effect
-                    if (enemy.slowEffect < 1) {
-                        this.ctx.strokeStyle = '#00ffff';
-                        this.ctx.lineWidth = 2;
-                        this.ctx.beginPath();
-                        this.ctx.arc(enemy.x, enemy.y, enemy.size + 3, 0, Math.PI * 2);
-                        this.ctx.stroke();
-                    }
-                }
-                
-                // Draw projectiles
-                for (const proj of this.projectiles) {
-                    this.ctx.fillStyle = proj.color;
-                    this.ctx.beginPath();
-                    this.ctx.arc(proj.x, proj.y, 3, 0, Math.PI * 2);
-                    this.ctx.fill();
-                    
-                    // Projectile trail
-                    this.ctx.strokeStyle = proj.color + '88';
-                    this.ctx.lineWidth = 2;
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(proj.x, proj.y);
-                    this.ctx.lineTo(proj.x - proj.vx * 5, proj.y - proj.vy * 5);
-                    this.ctx.stroke();
-                }
-                
-                // Draw particles
-                for (const particle of this.particles) {
-                    const alpha = particle.life / particle.maxLife;
-                    this.ctx.fillStyle = particle.color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
-                    this.ctx.beginPath();
-                    this.ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
-                    this.ctx.fill();
-                }
-                
-                // Placement preview
-                if (this.selectedTowerType) {
-                    const towerData = this.towerTypes[this.selectedTowerType];
-                    this.ctx.fillStyle = towerData.color + '66';
-                    this.ctx.strokeStyle = this.money >= towerData.cost ? '#00ff00' : '#ff0000';
-                    this.ctx.lineWidth = 2;
-                    
-                    // Show range preview on last touch/mouse position
-                    // For simplicity, we'll show it at canvas center when first selected
-                    const previewX = this.canvasWidth / 2;
-                    const previewY = this.canvasHeight / 2;
-                    
-                    this.ctx.beginPath();
-                    this.ctx.arc(previewX, previewY, towerData.range, 0, Math.PI * 2);
-                    this.ctx.stroke();
-                }
-            }
-            
-            gameOver() {
-                document.getElementById('finalScore').textContent = this.score;
-                document.getElementById('finalWave').textContent = this.wave;
-                document.getElementById('gameOver').style.display = 'flex';
+                money -= towerType.cost;
+                updateUI();
             }
         }
-        
-        // Initialize game when page loads
-        window.addEventListener('load', () => {
-            new MobileGame();
-        });
-    </script>
-</body>
-</html>
+
+        function isValidPlacement(x, y) {
+            const minDistance = 40;
+            
+            // 経路との距離チェック
+            for (let i = 0; i < path.length - 1; i++) {
+                const dist = distanceToLineSegment(x, y, path[i], path[i + 1]);
+                if (dist < minDistance) return false;
+            }
+            
+            // 他のタワーとの距離チェック
+            for (const tower of towers) {
+                const dist = Math.sqrt((x - tower.x) ** 2 + (y - tower.y) ** 2);
+                if (dist < minDistance) return false;
+            }
+            
+            return true;
+        }
+
+        function distanceToLineSegment(px, py, line1, line2) {
+            const A = px - line1.x;
+            const B = py - line1.y;
+            const C = line2.x - line1.x;
+            const D = line2.y - line1.y;
+
+            const dot = A * C + B * D;
+            const lenSq = C * C + D * D;
+            let param = -1;
+            if (lenSq !== 0) param = dot / lenSq;
+
+            let xx, yy;
+            if (param < 0) {
+                xx = line1.x;
+                yy = line1.y;
+            } else if (param > 1) {
+                xx = line2.x;
+                yy = line2.y;
+            } else {
+                xx = line1.x + param * C;
+                yy = line1.y + param * D;
+            }
+
+            const dx = px - xx;
+            const dy = py - yy;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        function spawnEnemy(type, waveBonus = 0) {
+            const enemyData = enemyTypes[type];
+            const enemy = {
+                x: path[0].x,
+                y: path[0].y,
+                pathIndex: 0,
+                hp: enemyData.hp + waveBonus * 20,
+                maxHp: enemyData.hp + waveBonus * 20,
+                speed: enemyData.speed,
+                color: enemyData.color,
+                reward: enemyData.reward,
+                size: enemyData.size,
+                type: type,
+                effects: {},
+                lastTeleport: 0,
+                rushActivated: false,
+                barrier: enemyData.barrier || 0,
+                groupId: Math.random() // 群れ移動用ID
+            };
+
+            // 特殊能力の初期化
+            if (enemyData.armor) enemy.armor = enemyData.armor;
+            if (enemyData.laserWeak) enemy.laserWeak = true;
+            if (enemyData.stealth) enemy.stealth = true;
+            if (enemyData.healer) enemy.healer = true;
+            if (enemyData.splitter) enemy.splitter = true;
+            if (enemyData.shield) enemy.shield = true;
+            if (enemyData.teleport) enemy.teleport = true;
+            if (enemyData.boss) enemy.boss = true;
+            if (enemyData.rush) enemy.rush = true;
+
+            return enemy;
+        }
+
+        function updateGame() {
+            if (gameOver) return;
+
+            // ゲーム速度適用
+            for (let speedStep = 0; speedStep < gameSpeed; speedStep++) {
+                frameCount++;
+
+                // ウェーブ管理の改善
+                if (currentWaveEnemies.length === 0 && enemies.length === 0) {
+                    if (waveCountdown <= 0) {
+                        currentWave++;
+                        waveCountdown = 180; // 3秒 (60fps * 3)
+                        
+                        // 次のウェーブの敵を準備
+                        const enemyCount = Math.min(5 + currentWave * 2, 25);
+                        currentWaveEnemies = [];
+                        
+                        for (let i = 0; i < enemyCount; i++) {
+                            let enemyType = 'normal';
+                            const rand = Math.random();
+                            
+                            if (currentWave >= 3) {
+                                if (currentWave % 10 === 0) {
+                                    enemyType = 'boss';
+                                } else if (rand < 0.05) {
+                                    enemyType = 'teleport';
+                                } else if (rand < 0.1) {
+                                    enemyType = 'stealth';
+                                } else if (rand < 0.15) {
+                                    enemyType = 'healer';
+                                } else if (rand < 0.2) {
+                                    enemyType = 'splitter';
+                                } else if (rand < 0.25) {
+                                    enemyType = 'shield';
+                                } else if (rand < 0.35) {
+                                    enemyType = 'armor';
+                                } else if (rand < 0.45) {
+                                    enemyType = 'rush';
+                                } else if (rand < 0.55) {
+                                    enemyType = 'barrier';
+                                } else if (rand < 0.7) {
+                                    enemyType = 'fast';
+                                }
+                            } else if (rand < 0.3) {
+                                enemyType = 'fast';
+                            }
+                            
+                            currentWaveEnemies.push({
+                                spawn: i * 30, // 0.5秒間隔
+                                type: enemyType
+                            });
+                        }
+                        enemySpawnIndex = 0;
+                    } else {
+                        waveCountdown--;
+                    }
+                }
+                
+                // 敵のスポーン処理の改善
+                if (currentWaveEnemies.length > 0 && enemySpawnIndex < currentWaveEnemies.length) {
+                    const nextEnemy = currentWaveEnemies[enemySpawnIndex];
+                    if (frameCount >= nextEnemy.spawn) {
+                        const enemy = spawnEnemy(nextEnemy.type, currentWave - 1);
+                        enemies.push(enemy);
+                        enemySpawnIndex++;
+                    }
+                }
+
+                // 敵の移動
+                for (let i = enemies.length - 1; i >= 0; i--) {
+                    const enemy = enemies[i];
+                    
+                    // 特殊能力の処理
+                    if (enemy.healer && frameCount % 60 === 0) {
+                        // ヒーラー能力：周囲の敵を回復
+                        enemies.forEach(other => {
+                            if (other !== enemy) {
+                                const dist = Math.sqrt((enemy.x - other.x) ** 2 + (enemy.y - other.y) ** 2);
+                                if (dist < 80) {
+                                    other.hp = Math.min(other.hp + 20, other.maxHp);
+                                }
+                            }
+                        });
+                    }
+
+                    if (enemy.teleport && frameCount - enemy.lastTeleport > 300 && Math.random() < 0.01) {
+                        // テレポート能力
+                        const newIndex = Math.min(enemy.pathIndex + 2, path.length - 1);
+                        enemy.pathIndex = newIndex;
+                        if (newIndex < path.length) {
+                            enemy.x = path[newIndex].x;
+                            enemy.y = path[newIndex].y;
+                        }
+                        enemy.lastTeleport = frameCount;
+                    }
+
+                    if (enemy.rush && !enemy.rushActivated && enemy.hp < enemy.maxHp * 0.5) {
+                        // ラッシュ能力：HP半分以下で加速
+                        enemy.speed *= 2;
+                        enemy.rushActivated = true;
+                        enemy.color = '#ff4757';
+                    }
+
+                    // スローエフェクトの処理
+                    let currentSpeed = enemy.speed;
+                    if (enemy.effects.slow) {
+                        currentSpeed *= 0.5;
+                        enemy.effects.slow--;
+                        if (enemy.effects.slow <= 0) {
+                            delete enemy.effects.slow;
+                        }
+                    }
+                    
+                    // 次の目標点を取得
+                    if (enemy.pathIndex < path.length - 1) {
+                        const target = path[enemy.pathIndex + 1];
+                        const dx = target.x - enemy.x;
+                        const dy = target.y - enemy.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        // 目標点に十分近づいたら次のポイントへ
+                        if (distance < 5) {
+                            enemy.pathIndex++;
+                            // 次のポイントが存在する場合、正確な位置に設定
+                            if (enemy.pathIndex < path.length) {
+                                const nextTarget = path[enemy.pathIndex];
+                                enemy.x = nextTarget.x;
+                                enemy.y = nextTarget.y;
+                            }
+                        } else {
+                            // 移動方向を正規化して移動
+                            const moveX = (dx / distance) * currentSpeed;
+                            const moveY = (dy / distance) * currentSpeed;
+                            enemy.x += moveX;
+                            enemy.y += moveY;
+                        }
+                    } else {
+                        // ゴールに到達
+                        enemies.splice(i, 1);
+                        lives--;
+                        if (lives <= 0) {
+                            gameOver = true;
+                        }
+                    }
+                }
+
+                // タワーの攻撃
+                towers.forEach(tower => {
+                    if (frameCount - tower.lastFire >= tower.fireRate) {
+                        let target = null;
+                        let closestDist = tower.range;
+
+                        enemies.forEach(enemy => {
+                            // ステルス敵の検出（レーザータワーのみ可能）
+                            if (enemy.stealth && tower.type !== 'laser') return;
+                            
+                            const dist = Math.sqrt((tower.x - enemy.x) ** 2 + (tower.y - enemy.y) ** 2);
+                            if (dist <= closestDist) {
+                                target = enemy;
+                                closestDist = dist;
+                            }
+                        });
+
+                        if (target) {
+                            projectiles.push({
+                                x: tower.x,
+                                y: tower.y,
+                                targetX: target.x,
+                                targetY: target.y,
+                                target: target,
+                                damage: tower.damage,
+                                speed: tower.projectileSpeed,
+                                color: tower.color,
+                                type: tower.type,
+                                slow: tower.slow
+                            });
+                            tower.lastFire = frameCount;
+                        }
+                    }
+                });
+
+                // 弾丸の移動
+                for (let i = projectiles.length - 1; i >= 0; i--) {
+                    const proj = projectiles[i];
+                    const dx = proj.targetX - proj.x;
+                    const dy = proj.targetY - proj.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < proj.speed || dist < 10) {
+                        // 弾丸が目標に到達
+                        if (proj.target && enemies.includes(proj.target)) {
+                            let damage = proj.damage;
+                            
+                            // 装甲システム
+                            if (proj.target.armor && proj.type !== 'laser') {
+                                damage *= proj.target.armor;
+                            }
+                            
+                            // レーザー弱点システム
+                            if (proj.target.laserWeak && proj.type === 'laser') {
+                                damage *= 2;
+                            }
+
+                            // シールドシステム（前方からの攻撃無効）
+                            if (proj.target.shield) {
+                                const enemyAngle = Math.atan2(
+                                    path[Math.min(proj.target.pathIndex + 1, path.length - 1)].y - proj.target.y,
+                                    path[Math.min(proj.target.pathIndex + 1, path.length - 1)].x - proj.target.x
+                                );
+                                const attackAngle = Math.atan2(proj.y - proj.target.y, proj.x - proj.target.x);
+                                const angleDiff = Math.abs(enemyAngle - attackAngle);
+                                
+                                if (angleDiff < Math.PI / 2 || angleDiff > 3 * Math.PI / 2) {
+                                    damage = 0; // 前方からの攻撃無効
+                                }
+                            }
+
+                            // バリアシステム
+                            if (proj.target.barrier > 0) {
+                                proj.target.barrier -= damage;
+                                if (proj.target.barrier <= 0) {
+                                    proj.target.barrier = 0;
+                                }
+                                damage = 0;
+                            } else {
+                                proj.target.hp -= damage;
+                            }
+
+                            // スローエフェクト
+                            if (proj.slow) {
+                                proj.target.effects.slow = 120; // 2秒間
+                            }
+
+                            // 敵の撃破処理
+                            if (proj.target.hp <= 0) {
+                                money += proj.target.reward;
+                                score += proj.target.reward * 10;
+                                
+                                // スプリッター能力
+                                if (proj.target.splitter) {
+                                    for (let j = 0; j < 2; j++) {
+                                        const miniEnemy = spawnEnemy('normal');
+                                        miniEnemy.hp = 30;
+                                        miniEnemy.maxHp = 30;
+                                        miniEnemy.size = 8;
+                                        miniEnemy.x = proj.target.x + (Math.random() - 0.5) * 20;
+                                        miniEnemy.y = proj.target.y + (Math.random() - 0.5) * 20;
+                                        miniEnemy.pathIndex = proj.target.pathIndex;
+                                        miniEnemy.reward = 5;
+                                        enemies.push(miniEnemy);
+                                    }
+                                }
+                                
+                                const enemyIndex = enemies.indexOf(proj.target);
+                                if (enemyIndex > -1) {
+                                    enemies.splice(enemyIndex, 1);
+                                }
+                            }
+                        }
+                        projectiles.splice(i, 1);
+                    } else {
+                        // 弾丸を移動
+                        proj.x += (dx / dist) * proj.speed;
+                        proj.y += (dy / dist) * proj.speed;
+                    }
+                }
+            }
+
+            updateUI();
+        }
+
+        function render() {
+            // 背景をクリア
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 経路を描画
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 30;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            ctx.moveTo(path[0].x, path[0].y);
+            for (let i = 1; i < path.length; i++) {
+                ctx.lineTo(path[i].x, path[i].y);
+            }
